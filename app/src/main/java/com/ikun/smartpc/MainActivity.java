@@ -1,15 +1,21 @@
 package com.ikun.smartpc;
 
 import android.app.Activity;
-import android.content.pm.ActivityInfo;
-import android.os.Bundle;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.net.Uri;
+import android.os.Bundle;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 public class MainActivity extends Activity {
     private WebView webView;
@@ -41,10 +47,14 @@ public class MainActivity extends Activity {
         public void openExternal(String url) {
             runOnUiThread(() -> {
                 try {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    startActivity(intent);
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
                 } catch (Exception ignored) { }
             });
+        }
+
+        @JavascriptInterface
+        public void openShop(String platform, String query) {
+            runOnUiThread(() -> openShoppingApp(platform, query));
         }
 
         @JavascriptInterface
@@ -62,6 +72,65 @@ public class MainActivity extends Activity {
                         break;
                 }
             });
+        }
+    }
+
+    private void openShoppingApp(String platform, String query) {
+        String pkg;
+        String url;
+        String label;
+        String encoded = URLEncoder.encode(query == null ? "" : query, StandardCharsets.UTF_8);
+        switch (platform) {
+            case "jd":
+                pkg = "com.jingdong.app.mall";
+                url = "https://search.jd.com/Search?keyword=" + encoded;
+                label = "京东";
+                break;
+            case "taobao":
+                pkg = "com.taobao.taobao";
+                url = "https://s.taobao.com/search?q=" + encoded;
+                label = "淘宝";
+                break;
+            case "pdd":
+                pkg = "com.xunmeng.pinduoduo";
+                url = "https://mobile.yangkeduo.com/search_result.html?search_key=" + encoded;
+                label = "拼多多";
+                break;
+            default:
+                return;
+        }
+
+        copyToClipboard(query);
+
+        try {
+            Intent deep = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            deep.setPackage(pkg);
+            deep.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(deep);
+            return;
+        } catch (Exception ignored) { }
+
+        try {
+            Intent launch = getPackageManager().getLaunchIntentForPackage(pkg);
+            if (launch != null) {
+                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(launch);
+                Toast.makeText(this, "已打开" + label + "，型号已复制，可粘贴搜索", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        } catch (Exception ignored) { }
+
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+            Toast.makeText(this, "未检测到" + label + " App，已改用浏览器", Toast.LENGTH_SHORT).show();
+        } catch (Exception ignored) { }
+    }
+
+    private void copyToClipboard(String text) {
+        if (text == null || text.trim().isEmpty()) return;
+        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboard != null) {
+            clipboard.setPrimaryClip(ClipData.newPlainText("hardware-model", text));
         }
     }
 
