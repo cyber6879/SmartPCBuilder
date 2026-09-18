@@ -7,7 +7,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -46,9 +49,8 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void openExternal(String url) {
             runOnUiThread(() -> {
-                try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-                } catch (Exception ignored) { }
+                try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); }
+                catch (Exception ignored) { }
             });
         }
 
@@ -58,21 +60,32 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void vibrate(int milliseconds) {
+            runOnUiThread(() -> vibrateOnce(Math.max(8, Math.min(milliseconds, 80))));
+        }
+
+        @JavascriptInterface
         public void setOrientation(String mode) {
             runOnUiThread(() -> {
                 switch (mode) {
-                    case "portrait":
-                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                        break;
-                    case "landscape":
-                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-                        break;
-                    default:
-                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
-                        break;
+                    case "portrait": setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); break;
+                    case "landscape": setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE); break;
+                    default: setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED); break;
                 }
             });
         }
+    }
+
+    private void vibrateOnce(int ms) {
+        try {
+            Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+            if (vibrator == null || !vibrator.hasVibrator()) return;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE));
+            } else {
+                vibrator.vibrate(ms);
+            }
+        } catch (Exception ignored) { }
     }
 
     private void openShoppingApp(String platform, String query) {
@@ -101,7 +114,6 @@ public class MainActivity extends Activity {
         }
 
         copyToClipboard(query);
-
         try {
             Intent deep = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             deep.setPackage(pkg);
@@ -129,17 +141,12 @@ public class MainActivity extends Activity {
     private void copyToClipboard(String text) {
         if (text == null || text.trim().isEmpty()) return;
         ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-        if (clipboard != null) {
-            clipboard.setPrimaryClip(ClipData.newPlainText("hardware-model", text));
-        }
+        if (clipboard != null) clipboard.setPrimaryClip(ClipData.newPlainText("hardware-model", text));
     }
 
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
+        if (webView != null && webView.canGoBack()) webView.goBack();
+        else super.onBackPressed();
     }
 }
