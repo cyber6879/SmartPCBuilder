@@ -16,6 +16,7 @@ jobs:
         run: |
           node --check app/src/main/assets/hardware-data.js
           node --check app/src/main/assets/app.js
+          node tools/validate-data.js
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
