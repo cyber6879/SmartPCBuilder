@@ -37,12 +37,37 @@ public class MainActivity extends Activity {
         settings.setAllowContentAccess(false);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
-        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
 
-        webView.setWebViewClient(new WebViewClient());
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                if (url != null && url.startsWith("file:///android_asset/index.html")) {
+                    injectV061Packs(view);
+                }
+            }
+        });
         webView.setWebChromeClient(new WebChromeClient());
         webView.addJavascriptInterface(new NativeBridge(), "AndroidBridge");
         webView.loadUrl("file:///android_asset/index.html");
+    }
+
+    private void injectV061Packs(WebView view) {
+        String js =
+            "(function(){" +
+            "if(window.__v061LoaderStarted)return;window.__v061LoaderStarted=true;" +
+            "var files=['catalog-extra-v061.js','catalog-domestic-v061.js','market-prices-v061.js','market-domestic-v061.js','v061-hotfix.js'];" +
+            "function load(i){" +
+              "if(i>=files.length)return;" +
+              "var s=document.createElement('script');s.src=files[i]+'?v=061';" +
+              "s.onload=function(){load(i+1)};" +
+              "s.onerror=function(){console.error('Failed to load '+files[i]);load(i+1)};" +
+              "document.body.appendChild(s);" +
+            "}" +
+            "load(0);" +
+            "})();";
+        view.evaluateJavascript(js, null);
     }
 
     public class NativeBridge {
