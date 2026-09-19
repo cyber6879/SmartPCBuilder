@@ -6,6 +6,7 @@ const files=[
  'app/src/main/assets/hardware-data.js',
  'app/src/main/assets/catalog-extra-v061.js',
  'app/src/main/assets/catalog-domestic-v061.js',
+ 'app/src/main/assets/evidence-normalize-v061.js',
  'app/src/main/assets/market-prices-v061.js',
  'app/src/main/assets/market-domestic-v061.js'
 ];
@@ -40,8 +41,7 @@ for(const x of DB){
   errors.push(`catalogVerified lacks official source: ${x.name}`);
  }
 }
-const ids=Object.keys(SRC);
-for(const id of ids){const s=SRC[id];if(!s.title||!s.url||!s.date||!s.kind)errors.push(`incomplete source: ${id}`);}
+for(const [id,s] of Object.entries(SRC)){if(!s.title||!s.url||!s.date||!s.kind)errors.push(`incomplete source: ${id}`);}
 const brands=new Set(DB.map(x=>x.brand));
 const byCategory={};for(const x of DB)byCategory[x.cat]=(byCategory[x.cat]||0)+1;
 const priced=DB.filter(x=>x.priceVerified&&x.price!=null);
