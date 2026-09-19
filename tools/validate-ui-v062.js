@@ -1,0 +1,20 @@
+const fs=require('fs');
+const path=require('path');
+const root=path.join(__dirname,'..');
+const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+const html=read('app/src/main/assets/index.html');
+const core=read('app/src/main/assets/v062-core.js');
+const activity=read('app/src/main/java/com/ikun/smartpc/MainActivity.java');
+let errors=[];
+const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
+const pages=new Set([...html.matchAll(/<section\s+id="([^"]+)"\s+class="page(?:\s+on)?"/g)].map(m=>m[1]));
+const navTargets=[...html.matchAll(/<button[^>]+data-p="([^"]+)"/g)].map(m=>m[1]);
+if(navTargets.length!==5)errors.push(`bottom nav expected 5 buttons, got ${navTargets.length}`);
+for(const p of navTargets)if(!pages.has(p))errors.push(`bottom nav target missing page: ${p}`);
+for(const id of ['partSearch','searchCat','selectedParts','diagnostics','assistantPanel','database','compare','rules'])if(!ids.includes(id))errors.push(`required UI id missing: ${id}`);
+for(const fn of ['robustGo','manualPick','fillMissingSmart','reasonCheckNow','calcDiagnostics','renderDiagnostics'])if(!core.includes(fn))errors.push(`v062 core missing function: ${fn}`);
+if(!activity.includes("'v062-core.js'"))errors.push('Android runtime loader does not load v062-core.js');
+if(!activity.includes("'evidence-normalize-v061.js'"))errors.push('Android runtime loader missing evidence-normalize-v061.js');
+if(errors.length){console.error('V0.6.2 UI VALIDATION FAILED');errors.forEach(e=>console.error('-',e));process.exit(1);}
+console.log('V0.6.2 UI VALIDATION PASSED');
+console.log('pages=',[...pages].join(','),'nav=',navTargets.join(','));
