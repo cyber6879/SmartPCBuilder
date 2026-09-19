@@ -22,8 +22,10 @@ jobs:
           node --check app/src/main/assets/market-domestic-v061.js
           node --check app/src/main/assets/app.js
           node --check app/src/main/assets/v061-hotfix.js
+          node --check app/src/main/assets/v062-core.js
           node tools/validate-data.js
           node tools/validate-v061.js
+          node tools/validate-ui-v062.js
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
