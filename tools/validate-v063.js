@@ -1,0 +1,21 @@
+const fs=require('fs');
+const path=require('path');
+const root=path.join(__dirname,'..');
+const html=fs.readFileSync(path.join(root,'app/src/main/assets/index-v063.html'),'utf8');
+const core=fs.readFileSync(path.join(root,'app/src/main/assets/v063-core.js'),'utf8');
+const java=fs.readFileSync(path.join(root,'app/src/main/java/com/ikun/smartpc/MainActivity.java'),'utf8');
+let e=[];
+const scripts=['hardware-data.js','catalog-extra-v061.js','catalog-domestic-v061.js','evidence-normalize-v061.js','market-prices-v061.js','market-domestic-v061.js','app.js','v061-hotfix.js','v062-core.js','v063-core.js'];
+let last=-1;for(const s of scripts){const i=html.indexOf(`src="${s}"`);if(i<0)e.push('missing fixed script '+s);if(i<last)e.push('wrong script order '+s);last=i;}
+for(const id of ['naturalInput','naturalRun','pickerCats','pickerPanel','pickerSearch','pickerBrand','pickerList','selectedParts','diagnostics','shops','dbList','compareContent'])if(!html.includes(`id="${id}"`))e.push('missing UI '+id);
+for(const p of ['home','build','database','compare','rules'])if(!html.includes(`data-p="${p}"`))e.push('missing nav '+p);
+for(const fn of ['openPickerV063','selectPickerV063','selectCustomPickerV063','parseNatural','clearAllV063','renderPickerV063'])if(!core.includes(`window.${fn}`)&&!core.includes(`function ${fn}`))e.push('missing function '+fn);
+for(const phrase of ['选择这个','替换当前','具体品牌型号待确认','state.locks[x.cat]=true'])if(!core.includes(phrase))e.push('missing picker behavior '+phrase);
+if(!java.includes('file:///android_asset/index-v063.html'))e.push('Android does not load v063 page');
+if(java.includes('injectRuntimePacks')||java.includes('evaluateJavascript(js'))e.push('runtime injection still present');
+const cats=['cpu','board','gpu','ram','ssd','psu','cooler','case'];
+if(!html.includes('id="pickerCats"'))e.push('picker categories container absent');
+if(!core.includes('CATS.map'))e.push('picker does not render all categories');
+console.log('SmartPCBuilder v0.6.3 interaction validation');
+console.log('fixedScripts=',scripts.length,'categories=',cats.length);
+if(e.length){console.error('VALIDATION FAILED');e.forEach(x=>console.error('-',x));process.exit(1);}console.log('VALIDATION PASSED');
