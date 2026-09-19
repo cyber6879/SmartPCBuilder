@@ -44,7 +44,7 @@ public class MainActivity extends Activity {
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 if (url != null && url.startsWith("file:///android_asset/index.html")) {
-                    injectV061Packs(view);
+                    injectRuntimePacks(view);
                 }
             }
         });
@@ -53,14 +53,14 @@ public class MainActivity extends Activity {
         webView.loadUrl("file:///android_asset/index.html");
     }
 
-    private void injectV061Packs(WebView view) {
+    private void injectRuntimePacks(WebView view) {
         String js =
             "(function(){" +
-            "if(window.__v061LoaderStarted)return;window.__v061LoaderStarted=true;" +
-            "var files=['catalog-extra-v061.js','catalog-domestic-v061.js','evidence-normalize-v061.js','market-prices-v061.js','market-domestic-v061.js','v061-hotfix.js'];" +
+            "if(window.__smartpcRuntimeStarted)return;window.__smartpcRuntimeStarted=true;" +
+            "var files=['catalog-extra-v061.js','catalog-domestic-v061.js','evidence-normalize-v061.js','market-prices-v061.js','market-domestic-v061.js','v061-hotfix.js','v062-core.js'];" +
             "function load(i){" +
-              "if(i>=files.length)return;" +
-              "var s=document.createElement('script');s.src=files[i]+'?v=061';" +
+              "if(i>=files.length){if(window.__bootV062)window.__bootV062();return;}" +
+              "var s=document.createElement('script');s.src=files[i]+'?v=062';" +
               "s.onload=function(){load(i+1)};" +
               "s.onerror=function(){console.error('Failed to load '+files[i]);load(i+1)};" +
               "document.body.appendChild(s);" +
