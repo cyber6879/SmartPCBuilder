@@ -15,8 +15,15 @@ jobs:
       - name: Validate local data and UI JavaScript
         run: |
           node --check app/src/main/assets/hardware-data.js
+          node --check app/src/main/assets/catalog-extra-v061.js
+          node --check app/src/main/assets/catalog-domestic-v061.js
+          node --check app/src/main/assets/evidence-normalize-v061.js
+          node --check app/src/main/assets/market-prices-v061.js
+          node --check app/src/main/assets/market-domestic-v061.js
           node --check app/src/main/assets/app.js
+          node --check app/src/main/assets/v061-hotfix.js
           node tools/validate-data.js
+          node tools/validate-v061.js
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
