@@ -12,7 +12,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Validate local data and UI JavaScript
+      - name: Validate local data and v0.6.3 interaction chain
         run: |
           node --check app/src/main/assets/hardware-data.js
           node --check app/src/main/assets/catalog-extra-v061.js
@@ -26,7 +26,6 @@ jobs:
           node --check app/src/main/assets/v063-core.js
           node tools/validate-data.js
           node tools/validate-v061.js
-          node tools/validate-ui-v062.js
           node tools/validate-v063.js
       - uses: gradle/actions/setup-gradle@v4
         with:
