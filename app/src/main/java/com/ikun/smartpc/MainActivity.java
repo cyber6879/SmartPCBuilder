@@ -57,7 +57,7 @@ public class MainActivity extends Activity {
         String js =
             "(function(){" +
             "if(window.__v061LoaderStarted)return;window.__v061LoaderStarted=true;" +
-            "var files=['catalog-extra-v061.js','catalog-domestic-v061.js','market-prices-v061.js','market-domestic-v061.js','v061-hotfix.js'];" +
+            "var files=['catalog-extra-v061.js','catalog-domestic-v061.js','evidence-normalize-v061.js','market-prices-v061.js','market-domestic-v061.js','v061-hotfix.js'];" +
             "function load(i){" +
               "if(i>=files.length)return;" +
               "var s=document.createElement('script');s.src=files[i]+'?v=061';" +
