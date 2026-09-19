@@ -39,35 +39,10 @@ public class MainActivity extends Activity {
         settings.setDisplayZoomControls(false);
         settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
 
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                if (url != null && url.startsWith("file:///android_asset/index.html")) {
-                    injectRuntimePacks(view);
-                }
-            }
-        });
+        webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new WebChromeClient());
         webView.addJavascriptInterface(new NativeBridge(), "AndroidBridge");
-        webView.loadUrl("file:///android_asset/index.html");
-    }
-
-    private void injectRuntimePacks(WebView view) {
-        String js =
-            "(function(){" +
-            "if(window.__smartpcRuntimeStarted)return;window.__smartpcRuntimeStarted=true;" +
-            "var files=['catalog-extra-v061.js','catalog-domestic-v061.js','evidence-normalize-v061.js','market-prices-v061.js','market-domestic-v061.js','v061-hotfix.js','v062-core.js'];" +
-            "function load(i){" +
-              "if(i>=files.length){if(window.__bootV062)window.__bootV062();return;}" +
-              "var s=document.createElement('script');s.src=files[i]+'?v=062';" +
-              "s.onload=function(){load(i+1)};" +
-              "s.onerror=function(){console.error('Failed to load '+files[i]);load(i+1)};" +
-              "document.body.appendChild(s);" +
-            "}" +
-            "load(0);" +
-            "})();";
-        view.evaluateJavascript(js, null);
+        webView.loadUrl("file:///android_asset/index-v063.html");
     }
 
     public class NativeBridge {
@@ -105,58 +80,32 @@ public class MainActivity extends Activity {
         try {
             Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
             if (vibrator == null || !vibrator.hasVibrator()) return;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE));
-            } else {
-                vibrator.vibrate(ms);
-            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) vibrator.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE));
+            else vibrator.vibrate(ms);
         } catch (Exception ignored) { }
     }
 
     private void openShoppingApp(String platform, String query) {
-        String pkg;
-        String url;
-        String label;
+        String pkg, url, label;
         String encoded = URLEncoder.encode(query == null ? "" : query, StandardCharsets.UTF_8);
         switch (platform) {
-            case "jd":
-                pkg = "com.jingdong.app.mall";
-                url = "https://search.jd.com/Search?keyword=" + encoded;
-                label = "京东";
-                break;
-            case "taobao":
-                pkg = "com.taobao.taobao";
-                url = "https://s.taobao.com/search?q=" + encoded;
-                label = "淘宝";
-                break;
-            case "pdd":
-                pkg = "com.xunmeng.pinduoduo";
-                url = "https://mobile.yangkeduo.com/search_result.html?search_key=" + encoded;
-                label = "拼多多";
-                break;
-            default:
-                return;
+            case "jd": pkg = "com.jingdong.app.mall"; url = "https://search.jd.com/Search?keyword=" + encoded; label = "京东"; break;
+            case "taobao": pkg = "com.taobao.taobao"; url = "https://s.taobao.com/search?q=" + encoded; label = "淘宝"; break;
+            case "pdd": pkg = "com.xunmeng.pinduoduo"; url = "https://mobile.yangkeduo.com/search_result.html?search_key=" + encoded; label = "拼多多"; break;
+            default: return;
         }
-
         copyToClipboard(query);
         try {
             Intent deep = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            deep.setPackage(pkg);
-            deep.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(deep);
-            return;
+            deep.setPackage(pkg); deep.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); startActivity(deep); return;
         } catch (Exception ignored) { }
-
         try {
             Intent launch = getPackageManager().getLaunchIntentForPackage(pkg);
             if (launch != null) {
-                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(launch);
-                Toast.makeText(this, "已打开" + label + "，型号已复制，可粘贴搜索", Toast.LENGTH_SHORT).show();
-                return;
+                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); startActivity(launch);
+                Toast.makeText(this, "已打开" + label + "，型号已复制，可粘贴搜索", Toast.LENGTH_SHORT).show(); return;
             }
         } catch (Exception ignored) { }
-
         try {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
             Toast.makeText(this, "未检测到" + label + " App，已改用浏览器", Toast.LENGTH_SHORT).show();
